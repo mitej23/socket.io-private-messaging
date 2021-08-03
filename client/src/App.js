@@ -1,25 +1,47 @@
-import logo from './logo.svg';
-import './App.css';
+/* eslint-disable */
+import React, { useEffect, useState } from "react";
+import Chat from "./components/Chat/Chat";
+import socket from "./socket.io";
 
-function App() {
+const App = () => {
+  const [usernameAlreadySelected, setUsernameAlreadySelected] = useState(false);
+  const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    socket.on("connect_error", (err) => {
+      if (err.message === "invalid username") {
+        setUsernameAlreadySelected(false);
+      }
+    });
+
+    return () => {
+      socket.off("connect_error");
+    };
+  }, []);
+
+  const submit = () => {
+    setUsernameAlreadySelected(true);
+    socket.auth = { username };
+    socket.connect();
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      {usernameAlreadySelected ? (
+        <>
+          <Chat />
+        </>
+      ) : (
+        <>
+          <h1>Enter username</h1>
+          <input type="text" onChange={(e) => setUsername(e.target.value)} />
+          <button type="button" onClick={submit}>
+            Submit
+          </button>
+        </>
+      )}
     </div>
   );
-}
+};
 
 export default App;
