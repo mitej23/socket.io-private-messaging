@@ -2,9 +2,14 @@ const express = require("express");
 const app = express();
 const http = require("http");
 const server = http.createServer(app);
-const io = require("socket.io")(http, {
+const { Server } = require("socket.io");
+const io = new Server(server, {
   cors: {
-    origin: "http://localhost:8080",
+    origin: [
+      "http://localhost:19006",
+      "http://localhost:3001",
+      "http://192.168.2.6:3001/",
+    ],
   },
 });
 
@@ -24,12 +29,14 @@ io.use((socket, next) => {
 io.on("connection", (socket) => {
   // fetch existing users
   const users = [];
-  for (let [id, socket] of io.of("/").sockets) {
+  const clients = io.sockets.sockets;
+  clients.forEach((client) => {
     users.push({
-      userID: id,
+      userID: client.id,
       username: socket.username,
     });
-  }
+  });
+
   socket.emit("users", users);
 
   // notify existing users
